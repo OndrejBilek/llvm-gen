@@ -338,6 +338,13 @@ protected:
 
   virtual void visit(ast::Return *r) {
     // TODO I am homework
+    r->value->accept(this);
+
+    if (result == nullptr) {
+      result = llvm::ReturnInst::Create(context, zero, bb);
+    } else {
+      result = llvm::ReturnInst::Create(context, result, bb);
+    }
   }
 
   virtual void visit(ast::Assignment *a) {
