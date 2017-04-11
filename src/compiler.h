@@ -334,6 +334,34 @@ protected:
 
   virtual void visit(ast::While *d) {
     // TODO I am homework
+      d->condition->accept(this);
+
+      llvm::BasicBlock *body = llvm::BasicBlock::Create(context, "body", f);
+      llvm::BasicBlock *next = llvm::BasicBlock::Create(context, "next", f);
+
+      llvm::ICmpInst *cmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
+      llvm::BranchInst::Create(body, next, cmp, bb);
+
+      bb = body;
+      d->body->accept(this);
+      body = bb;
+      llvm::Value *bodyResult = result;
+      if (body != nullptr) {
+          llvm::BranchInst::Create(next, bb);
+      }
+      llvm::BranchInst::Create(body, next, cmp, bb);
+
+      bb = next;
+      if (body == nullptr) {
+          next->eraseFromParent();
+          result = nullptr;
+      } else {
+          llvm::PHINode *phi = llvm::PHINode::Create(t_int, 1, "while_phi", bb);
+          if (body != nullptr) {
+              phi->addIncoming(bodyResult, body);
+          }
+          result = phi;
+      }
   }
 
   virtual void visit(ast::Return *r) {
@@ -379,10 +407,51 @@ protected:
 
   virtual void visit(ast::Binary *op) {
     // TODO I am homework
+      op->lhs->accept(this);
+      llvm::Value *resultLhs = result;
+
+      op->rhs->accept(this);
+      llvm::Value *resultRhs = result;
+
+      switch (op->type) {
+          case Token::Type::opAdd:
+              break;
+          case Token::Type::opSub:
+              break;
+          case Token::Type::opMul:
+              break;
+          case Token::Type::opDiv:
+              break;
+          case Token::Type::opEq:
+              break;
+          case Token::Type::opNeq:
+              break;
+          case Token::Type::opLt:
+              break;
+          case Token::Type::opGt:
+              break;
+          case Token::Type::opLte:
+              break;
+          case Token::Type::opGte:
+              break;
+          default:
+              break;
+      }
+
   }
 
   virtual void visit(ast::Unary *op) {
     // TODO I am homework
+
+      switch (op->type) {
+          case Token::Type::opAdd:
+              break;
+          case Token::Type::opSub:
+              break;
+          default:
+              break;
+      }
+
   }
 
   virtual void visit(ast::Variable *v) {
