@@ -423,7 +423,7 @@ class Compiler : public ast::Visitor {
       case Token::Type::opDiv:result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
         break;
       case Token::Type::opEq:
-        result = llvm::CmpInst::Create(llvm::Instruction::ICmp,
+        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
                                        llvm::ICmpInst::ICMP_EQ,
                                        resultLhs,
                                        resultRhs,
@@ -439,7 +439,7 @@ class Compiler : public ast::Visitor {
                                         bb);
         break;
       case Token::Type::opLt:
-        result = llvm::CmpInst::Create(llvm::Instruction::ICmp,
+        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
                                        llvm::ICmpInst::ICMP_SLT,
                                        resultLhs,
                                        resultRhs,
@@ -447,7 +447,7 @@ class Compiler : public ast::Visitor {
                                        bb);
         break;
       case Token::Type::opGt:
-        result = llvm::CmpInst::Create(llvm::Instruction::ICmp,
+        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
                                        llvm::ICmpInst::ICMP_SGT,
                                        resultLhs,
                                        resultRhs,
