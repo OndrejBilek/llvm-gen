@@ -414,14 +414,23 @@ class Compiler : public ast::Visitor {
     llvm::Value *resultRhs = result;
 
     switch (op->type) {
-      case Token::Type::opAdd:result = llvm::BinaryOperator::CreateAdd(resultLhs, resultRhs, "add", bb);
-        break;
-      case Token::Type::opSub:result = llvm::BinaryOperator::CreateSub(resultLhs, resultRhs, "sub", bb);
-        break;
-      case Token::Type::opMul:result = llvm::BinaryOperator::CreateMul(resultLhs, resultRhs, "mul", bb);
-        break;
-      case Token::Type::opDiv:result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
-        break;
+        case Token::Type::opAdd:
+            result = llvm::BinaryOperator::CreateAdd(resultLhs, resultRhs, "add", bb);
+            return;
+        case Token::Type::opSub:
+            result = llvm::BinaryOperator::CreateSub(resultLhs, resultRhs, "sub", bb);
+            return;
+        case Token::Type::opMul:
+            result = llvm::BinaryOperator::CreateMul(resultLhs, resultRhs, "mul", bb);
+            return;
+        case Token::Type::opDiv:
+            result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
+            return;
+        default:result = nullptr;
+            break;
+    }
+
+    switch(op->type){
       case Token::Type::opEq:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
                                        llvm::ICmpInst::ICMP_EQ,
@@ -471,13 +480,20 @@ class Compiler : public ast::Visitor {
                                         bb);
         break;
       default:result = nullptr;
-        break;
+        return;
     }
 
+    result = llvm::SExtInst::Create(llvm::Instruction::CastOps::SExt,
+                                    result,
+                                    llvm::Type::getInt32Ty(context),
+                                    "sext",
+                                    bb);
   }
 
   virtual void visit(ast::Unary *op) {
     // TODO I am homework
+    op->operand->accept(this);
+
     switch (op->type) {
       case Token::Type::opAdd:result = llvm::BinaryOperator::CreateAdd(result, one, "inc", bb);
         break;
