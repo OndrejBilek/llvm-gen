@@ -1,5 +1,10 @@
 var a,b;
 
 begin
-   write a;
+    a := 0;
+    write a;
+
+    while a <> 5 do
+        a := a + 1
+        write a;
 end

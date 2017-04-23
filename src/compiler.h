@@ -336,23 +336,28 @@ class Compiler : public ast::Visitor {
     // TODO I am homework
     d->condition->accept(this);
 
-    llvm::BasicBlock *body = llvm::BasicBlock::Create(context, "body", f);
-    llvm::BasicBlock *next = llvm::BasicBlock::Create(context, "next", f);
+    llvm::BasicBlock *body = llvm::BasicBlock::Create(context, "while_body", f);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(context, "while_merge", f);
 
     llvm::ICmpInst *cmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
-    llvm::BranchInst::Create(body, next, cmp, bb);
+    llvm::BranchInst::Create(body, merge, cmp, bb);
+
+    bb = merge;
+    llvm::ReturnInst::Create(context, result, bb);
+    merge = bb;
 
     bb = body;
     d->body->accept(this);
-    body = bb;
-    llvm::Value *bodyResult = result;
-    if (body != nullptr) {
+    llvm::BranchInst::Create(body, merge, cmp, bb);
+
+    /*
+     * if (body != nullptr) {
       llvm::BranchInst::Create(next, bb);
     }
     llvm::BranchInst::Create(body, next, cmp, bb);
 
     bb = next;
-    if (body == nullptr) {
+     * if (body == nullptr) {
       next->eraseFromParent();
       result = nullptr;
     } else {
@@ -361,7 +366,8 @@ class Compiler : public ast::Visitor {
         phi->addIncoming(bodyResult, body);
       }
       result = phi;
-    }
+    }*/
+
   }
 
   virtual void visit(ast::Return *r) {
@@ -414,30 +420,26 @@ class Compiler : public ast::Visitor {
     llvm::Value *resultRhs = result;
 
     switch (op->type) {
-        case Token::Type::opAdd:
-            result = llvm::BinaryOperator::CreateAdd(resultLhs, resultRhs, "add", bb);
-            return;
-        case Token::Type::opSub:
-            result = llvm::BinaryOperator::CreateSub(resultLhs, resultRhs, "sub", bb);
-            return;
-        case Token::Type::opMul:
-            result = llvm::BinaryOperator::CreateMul(resultLhs, resultRhs, "mul", bb);
-            return;
-        case Token::Type::opDiv:
-            result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
-            return;
-        default:result = nullptr;
-            break;
+      case Token::Type::opAdd:result = llvm::BinaryOperator::CreateAdd(resultLhs, resultRhs, "add", bb);
+        return;
+      case Token::Type::opSub:result = llvm::BinaryOperator::CreateSub(resultLhs, resultRhs, "sub", bb);
+        return;
+      case Token::Type::opMul:result = llvm::BinaryOperator::CreateMul(resultLhs, resultRhs, "mul", bb);
+        return;
+      case Token::Type::opDiv:result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
+        return;
+      default:result = nullptr;
+        break;
     }
 
-    switch(op->type){
+    switch (op->type) {
       case Token::Type::opEq:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                       llvm::ICmpInst::ICMP_EQ,
-                                       resultLhs,
-                                       resultRhs,
-                                       "eq",
-                                       bb);
+                                        llvm::ICmpInst::ICMP_EQ,
+                                        resultLhs,
+                                        resultRhs,
+                                        "eq",
+                                        bb);
         break;
       case Token::Type::opNeq:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
@@ -449,19 +451,19 @@ class Compiler : public ast::Visitor {
         break;
       case Token::Type::opLt:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                       llvm::ICmpInst::ICMP_SLT,
-                                       resultLhs,
-                                       resultRhs,
-                                       "lt",
-                                       bb);
+                                        llvm::ICmpInst::ICMP_SLT,
+                                        resultLhs,
+                                        resultRhs,
+                                        "lt",
+                                        bb);
         break;
       case Token::Type::opGt:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                       llvm::ICmpInst::ICMP_SGT,
-                                       resultLhs,
-                                       resultRhs,
-                                       "gt",
-                                       bb);
+                                        llvm::ICmpInst::ICMP_SGT,
+                                        resultLhs,
+                                        resultRhs,
+                                        "gt",
+                                        bb);
         break;
       case Token::Type::opLte:
         result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
