@@ -4,7 +4,8 @@ begin
     a := 0;
     write a;
 
-    while a <> 5 do
-        a := a + 1
+    while a <> 0 do begin
+        a := a + 1;
         write a;
+    end
 end

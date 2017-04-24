@@ -336,37 +336,35 @@ class Compiler : public ast::Visitor {
     // TODO I am homework
     d->condition->accept(this);
 
-    llvm::BasicBlock *body = llvm::BasicBlock::Create(context, "while_body", f);
-    llvm::BasicBlock *merge = llvm::BasicBlock::Create(context, "while_merge", f);
+    llvm::BasicBlock *loop = llvm::BasicBlock::Create(context, "while_loop", f);
+    llvm::BasicBlock *exit = llvm::BasicBlock::Create(context, "while_exit", f);
 
     llvm::ICmpInst *cmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
-    llvm::BranchInst::Create(body, merge, cmp, bb);
+    llvm::BranchInst::Create(loop, exit, cmp, bb);
 
-    bb = merge;
-    llvm::ReturnInst::Create(context, result, bb);
-    merge = bb;
+    llvm::Value *currResult = result;
+    llvm::BasicBlock *currBb = bb;
 
-    bb = body;
+    bb = loop;
     d->body->accept(this);
-    llvm::BranchInst::Create(body, merge, cmp, bb);
+    llvm::Value *loopResult = result;
+    d->condition->accept(this);
+    llvm::ICmpInst *loopCmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
+    llvm::BranchInst::Create(loop, exit, loopCmp, bb);
+    loop = bb;
 
-    /*
-     * if (body != nullptr) {
-      llvm::BranchInst::Create(next, bb);
-    }
-    llvm::BranchInst::Create(body, next, cmp, bb);
-
-    bb = next;
-     * if (body == nullptr) {
-      next->eraseFromParent();
+    bb = exit;
+    if (loop == nullptr) {
+      exit->eraseFromParent();
       result = nullptr;
     } else {
-      llvm::PHINode *phi = llvm::PHINode::Create(t_int, 1, "while_phi", bb);
-      if (body != nullptr) {
-        phi->addIncoming(bodyResult, body);
+      llvm::PHINode *phi = llvm::PHINode::Create(t_int, 2, "while_phi", bb);
+      if (loop != nullptr) {
+        phi->addIncoming(loopResult, loop);
       }
+      phi->addIncoming(currResult, currBb);
       result = phi;
-    }*/
+    }
 
   }
 
