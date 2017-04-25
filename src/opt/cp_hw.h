@@ -104,7 +104,7 @@ class AValue {
   }
 
   bool isBottom() const {
-    return type_ == Type::Top;
+    return type_ == Type::Bottom;
   }
 
   bool isZero() const {
@@ -145,7 +145,11 @@ class AState {
     auto i = state_.find(index);
     if (i == state_.end()) {
       // TODO something is missing here that would prevent the analysis from working properly. You will get extra points if you figure out what it is.
-      i = state_.insert(std::make_pair(index, AValue())).first;
+      if (llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(index)) {
+        i = state_.insert(std::make_pair(index, ci->getSExtValue())).first;
+      } else {
+        i = state_.insert(std::make_pair(index, AValue())).first;
+      }
     }
     return i->second;
   }
@@ -265,9 +269,15 @@ class Analysis : public llvm::FunctionPass {
       assert(!rhs.isBottom());
       if (lhs.isConst() && rhs.isConst()) {
         switch (bop->getOpcode()) {
+          // TODO I am homework
           case llvm::Instruction::Add:currentState_[ins] = lhs.value() + rhs.value();
             break;
-            // TODO I am homework
+          case llvm::Instruction::Sub:currentState_[ins] = lhs.value() - rhs.value();
+            break;
+          case llvm::Instruction::Mul:currentState_[ins] = lhs.value() * rhs.value();
+            break;
+          case llvm::Instruction::SDiv:currentState_[ins] = lhs.value() / rhs.value();
+            break;
           default:UNREACHABLE;
             break;
         }
@@ -281,9 +291,9 @@ class Analysis : public llvm::FunctionPass {
       assert(!rhs.isBottom());
       if (lhs.isConst() && rhs.isConst()) {
         switch (cmp->getSignedPredicate()) {
+          // TODO I am homework
           case llvm::ICmpInst::ICMP_EQ:currentState_[ins] = lhs.value() == rhs.value();
             break;
-            // TODO I am homework
           default:UNREACHABLE;
             break;
         }
@@ -291,6 +301,16 @@ class Analysis : public llvm::FunctionPass {
         currentState_[ins] = AValue::Type::Top;
       }
       // TODO I am homework - what other instructions do we need to care about? Do we have to do something with those we do not care about wrt cp analysis?
+      // phi node
+      // sext
+      // unary
+      // vsechny ostatni instrukce
+    } else if (llvm::PHINode *phi = llvm::dyn_cast<llvm::PHINode>(ins)) {
+      AValue result = currentState_[phi->getOperand(0)];
+      for (size_t i = 1, e = phi->getNumOperands(); i != e; ++i) {
+        result.mergeWith(currentState_[phi->getOperand(i)]);
+      }
+      currentState_[ins] = result;
     }
   }
 
@@ -319,8 +339,24 @@ class Optimization : public llvm::FunctionPass {
   }
 
   bool runOnFunction(llvm::Function &f) override {
-    // We'll do this on next lecture
-    return false;
+    // TODO We'll do this on next lecture
+    bool changed = false;
+    Analysis &a = getAnalysis<Analysis>();
+
+    for (llvm::BasicBlock &b : f) {
+      a.setBasicBlock(&b);
+
+      for (llvm::Instruction &ins : b) {
+        a.advanceInstruction(&ins);
+
+        AValue val = a.currentState_[&ins];
+        if (val.isConst()) {
+          ins.replaceAllUsesWith(llvm::ConstantInt::get(llvm::getGlobalContext(), llvm::APInt(32, val.value())));
+          changed = true;
+        }
+      }
+    }
+    return changed;
   }
 
 };

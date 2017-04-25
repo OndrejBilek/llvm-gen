@@ -334,38 +334,25 @@ class Compiler : public ast::Visitor {
 
   virtual void visit(ast::While *d) {
     // TODO I am homework
+    llvm::BasicBlock *cond = llvm::BasicBlock::Create(context, "while_cond", f);
+    llvm::BasicBlock *body = llvm::BasicBlock::Create(context, "while_body", f);
+    llvm::BasicBlock *next = llvm::BasicBlock::Create(context, "while_next", f);
+
+    llvm::BranchInst::Create(cond, bb);
+
+    bb = cond;
     d->condition->accept(this);
-
-    llvm::BasicBlock *loop = llvm::BasicBlock::Create(context, "while_loop", f);
-    llvm::BasicBlock *exit = llvm::BasicBlock::Create(context, "while_exit", f);
-
     llvm::ICmpInst *cmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
-    llvm::BranchInst::Create(loop, exit, cmp, bb);
+    llvm::BranchInst::Create(body, next, cmp, bb);
 
-    llvm::Value *currResult = result;
-    llvm::BasicBlock *currBb = bb;
-
-    bb = loop;
+    bb = body;
     d->body->accept(this);
-    llvm::Value *loopResult = result;
-    d->condition->accept(this);
-    llvm::ICmpInst *loopCmp = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, result, zero, "");
-    llvm::BranchInst::Create(loop, exit, loopCmp, bb);
-    loop = bb;
-
-    bb = exit;
-    if (loop == nullptr) {
-      exit->eraseFromParent();
-      result = nullptr;
-    } else {
-      llvm::PHINode *phi = llvm::PHINode::Create(t_int, 2, "while_phi", bb);
-      if (loop != nullptr) {
-        phi->addIncoming(loopResult, loop);
-      }
-      phi->addIncoming(currResult, currBb);
-      result = phi;
+    if (bb != nullptr) {
+      llvm::BranchInst::Create(cond, bb);
     }
 
+    bb = next;
+    result = nullptr;
   }
 
   virtual void visit(ast::Return *r) {
@@ -377,6 +364,7 @@ class Compiler : public ast::Visitor {
     } else {
       result = llvm::ReturnInst::Create(context, result, bb);
     }
+    bb = nullptr;
   }
 
   virtual void visit(ast::Assignment *a) {
@@ -426,68 +414,22 @@ class Compiler : public ast::Visitor {
         return;
       case Token::Type::opDiv:result = llvm::BinaryOperator::CreateSDiv(resultLhs, resultRhs, "div", bb);
         return;
-      default:result = nullptr;
+      case Token::Type::opEq:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_EQ, resultLhs, resultRhs, "eq");
         break;
+      case Token::Type::opNeq:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, resultLhs, resultRhs, "eq");
+        break;
+      case Token::Type::opLt:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_SLT, resultLhs, resultRhs, "lt");
+        break;
+      case Token::Type::opGt:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_SGT, resultLhs, resultRhs, "gt");
+        break;
+      case Token::Type::opLte:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_SLE, resultLhs, resultRhs, "le");
+        break;
+      case Token::Type::opGte:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_SGE, resultLhs, resultRhs, "ge");
+        break;
+      default:UNREACHABLE;
     }
 
-    switch (op->type) {
-      case Token::Type::opEq:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_EQ,
-                                        resultLhs,
-                                        resultRhs,
-                                        "eq",
-                                        bb);
-        break;
-      case Token::Type::opNeq:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_NE,
-                                        resultLhs,
-                                        resultRhs,
-                                        "ne",
-                                        bb);
-        break;
-      case Token::Type::opLt:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_SLT,
-                                        resultLhs,
-                                        resultRhs,
-                                        "lt",
-                                        bb);
-        break;
-      case Token::Type::opGt:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_SGT,
-                                        resultLhs,
-                                        resultRhs,
-                                        "gt",
-                                        bb);
-        break;
-      case Token::Type::opLte:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_SLE,
-                                        resultLhs,
-                                        resultRhs,
-                                        "le",
-                                        bb);
-        break;
-      case Token::Type::opGte:
-        result = llvm::ICmpInst::Create(llvm::Instruction::ICmp,
-                                        llvm::ICmpInst::ICMP_SGE,
-                                        resultLhs,
-                                        resultRhs,
-                                        "ge",
-                                        bb);
-        break;
-      default:result = nullptr;
-        return;
-    }
-
-    result = llvm::SExtInst::Create(llvm::Instruction::CastOps::SExt,
-                                    result,
-                                    llvm::Type::getInt32Ty(context),
-                                    "sext",
-                                    bb);
+    result = new llvm::SExtInst(result, t_int, "", bb);
   }
 
   virtual void visit(ast::Unary *op) {
@@ -499,8 +441,7 @@ class Compiler : public ast::Visitor {
         break;
       case Token::Type::opSub:result = llvm::BinaryOperator::CreateSub(result, one, "dec", bb);
         break;
-      default:result = nullptr;
-        break;
+      default:UNREACHABLE;
     }
   }
 

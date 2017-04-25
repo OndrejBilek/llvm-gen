@@ -1,11 +1,8 @@
-var a,b;
+
+function t6(i, j) begin
+  if (i < j) then return i; else return j;
+end
 
 begin
-    a := 0;
-    write a;
-
-    while a <> 0 do begin
-        a := a + 1;
-        write a;
-    end
+    write t6(3, 4)
 end
