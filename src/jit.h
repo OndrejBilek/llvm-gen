@@ -3,6 +3,14 @@
 
 #include "llvm.h"
 #include "runtime.h"
+#include "compiler.h"
+
+#include "opt/cp.h"
+#include "opt/die.h"
+#include "opt/dce.h"
+#include "opt/inlining.h"
+#include "opt/unrolling.h"
+#include "opt/tail_recursion.h"
 
 namespace mila {
 
@@ -31,10 +39,33 @@ public:
 class JIT {
 public:
 
+  static bool optimize;
+
   typedef int (*MainPtr)();
 
   static MainPtr compile(llvm::Function *main) {
     llvm::Module *m = main->getParent();
+
+    if (optimize == true) {
+      // create function pass manager
+      auto pm = llvm::legacy::FunctionPassManager(m);
+      // add passes
+      pm.add(new cp::Analysis());
+      pm.add(new cp::Optimization());
+      pm.add(new die::Optimization());
+      pm.add(new dce::Optimization());
+      pm.add(new inlining::Optimization());
+      pm.add(new unrolling::Optimization());
+      pm.add(new tailrecursion::Optimization());
+
+      // run the pass manager on all functions in the module
+      for (llvm::Function & f : *m) {
+        while (pm.run(f)) {};
+        // debug print
+        //f.dump();
+      }
+    }
+
 
     std::string err;
 

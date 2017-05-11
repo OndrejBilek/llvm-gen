@@ -144,9 +144,9 @@ class AState {
   AValue &operator[](llvm::Value *index) {
     auto i = state_.find(index);
     if (i == state_.end()) {
-      // TODO something is missing here that would prevent the analysis from working properly. You will get extra points if you figure out what it is.
       if (llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(index)) {
         i = state_.insert(std::make_pair(index, ci->getSExtValue())).first;
+        // TODO something is missing here that would prevent the analysis from working properly. You will get extra points if you figure out what it is.
       } else {
         i = state_.insert(std::make_pair(index, AValue())).first;
       }
@@ -311,7 +311,9 @@ class Analysis : public llvm::FunctionPass {
         result.mergeWith(currentState_[phi->getOperand(i)]);
       }
       currentState_[ins] = result;
-    }
+    } //else if (llvm::SExtInst *sext = llvm::dyn_cast<llvm::SExtInst>(&ins)) {
+      //state_.set(zext, (*this)[zext->getOperand(0)]);
+    //}
   }
 
   llvm::BasicBlock *b_;

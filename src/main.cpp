@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <tests/tests.h>
 
 #include "llvm.h"
 
@@ -19,6 +20,8 @@ int main(int argc, char const *argv[]) {
   LLVMInitializeNativeTarget();
   LLVMInitializeNativeAsmPrinter();
   LLVMInitializeNativeAsmParser();
+
+  tests();
 
   try {
     char const *filename = nullptr;
