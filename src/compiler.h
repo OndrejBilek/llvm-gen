@@ -358,12 +358,7 @@ class Compiler : public ast::Visitor {
   virtual void visit(ast::Return *r) {
     // TODO I am homework
     r->value->accept(this);
-
-    if (result == nullptr) {
-      result = llvm::ReturnInst::Create(context, zero, bb);
-    } else {
-      result = llvm::ReturnInst::Create(context, result, bb);
-    }
+    result = llvm::ReturnInst::Create(context, result, bb);
     bb = nullptr;
   }
 
@@ -416,7 +411,7 @@ class Compiler : public ast::Visitor {
         return;
       case Token::Type::opEq:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_EQ, resultLhs, resultRhs, "eq");
         break;
-      case Token::Type::opNeq:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, resultLhs, resultRhs, "eq");
+      case Token::Type::opNeq:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_NE, resultLhs, resultRhs, "ne");
         break;
       case Token::Type::opLt:result = new llvm::ICmpInst(*bb, llvm::ICmpInst::ICMP_SLT, resultLhs, resultRhs, "lt");
         break;
@@ -429,7 +424,7 @@ class Compiler : public ast::Visitor {
       default:UNREACHABLE;
     }
 
-    result = new llvm::SExtInst(result, t_int, "", bb);
+    result = new llvm::ZExtInst(result, t_int, "", bb);
   }
 
   virtual void visit(ast::Unary *op) {

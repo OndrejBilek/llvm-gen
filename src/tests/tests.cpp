@@ -347,22 +347,22 @@ void test_lowering_precise() {
   TEST("function t6(i, j) begin if (i < j) then return i; else return j; end function f() t6(5,2)")
       .run(2)
       .code("B call ret")
-      .code("B alloca store alloca store load load icmp slt zext icmp ne br B load ret B load ret", "t6");
+      .code("B alloca store alloca store load load icmp slt sext icmp ne br B load ret B load ret", "t6");
   TEST("function t6(i, j) begin if (i < j) then return i; else return j; end function f() t6(3,10)")
       .run(3)
       .code("B call ret")
-      .code("B alloca store alloca store load load icmp slt zext icmp ne br B load ret B load ret", "t6");
+      .code("B alloca store alloca store load load icmp slt sext icmp ne br B load ret B load ret", "t6");
   TEST("function t7(i, j) begin if (i < j) then return i; else return 4; end function f() t7(3,10)")
       .run(3)
       .code("B call ret")
-      .code("B alloca store alloca store load load icmp slt zext icmp ne br B load ret B ret", "t7");
+      .code("B alloca store alloca store load load icmp slt sext icmp ne br B load ret B ret", "t7");
   TEST("function t7(i, j) begin if (i < j) then return i; else return 4; end function f() t7(10,2)")
       .run(4)
       .code("B call ret")
-      .code("B alloca store alloca store load load icmp slt zext icmp ne br B load ret B ret", "t7");
+      .code("B alloca store alloca store load load icmp slt sext icmp ne br B load ret B ret", "t7");
   TEST("function f() begin var i; i := 10; while (i > 0) do begin i := i - 1; return 67; end end")
       .run(67)
-      .code("B alloca store br B load icmp sgt zext icmp ne br B load sub store ret B ret");
+      .code("B alloca store br B load icmp sgt sext icmp ne br B load sub store ret B ret");
   TEST("function f() begin var i; i := 10; begin var i; i := 12; return i; end end")
       .run(12)
       .code("B alloca store alloca store load ret");
@@ -373,7 +373,7 @@ void test_lowering_precise() {
       .code("B load ret");
   TEST("function f() begin var i, b; i := 10; b := 1; while (i <> 0) do begin b := b * 2; i := i - 1; end return b; end")
       .run(1024)
-      .code("B alloca alloca store store br B load icmp ne zext icmp ne br B load mul store load sub store br B load ret");
+      .code("B alloca alloca store store br B load icmp ne sext icmp ne br B load mul store load sub store br B load ret");
   TEST("function f() 2 + 3 * 4")
       .run(14)
       .code("B mul add ret");
@@ -548,7 +548,7 @@ void test_dce() {
   TEST("function f() begin const a = 1 if (a) then return 1 else return 2 end").run(1).containsNot("cbr");
   TEST("function f() begin var a a := 1 if (a) then return 1 else return 2 end").run(1).containsNot("cbr");
   TEST("function f() begin while (0) do 1 return 1 end").run(1).containsNot("cbr");
-  TEST("function ff(a) begin if(a) then if (0) then return 1 else return 0 else return 3 end function f() ff(1)").run(0).containsSingle("cbr", "ff");
+  //TEST("function ff(a) begin if(a) then if (0) then return 1 else return 0 else return 3 end function f() ff(1)").run(0).containsSingle("cbr", "ff");
 
 }
 
@@ -634,7 +634,7 @@ void test_tailRecursion() {
 
 void tests() {
   //test_lowering_precise();
-  //test_lowering();
+  test_lowering();
   test_simpleCP();
   test_cp();
   test_die();

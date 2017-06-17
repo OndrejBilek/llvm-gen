@@ -21,7 +21,8 @@ int main(int argc, char const *argv[]) {
   LLVMInitializeNativeAsmPrinter();
   LLVMInitializeNativeAsmParser();
 
-  tests();
+  //tests();
+  JIT::optimize = true;
 
   try {
     char const *filename = nullptr;

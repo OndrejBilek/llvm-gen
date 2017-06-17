@@ -145,7 +145,7 @@ class AState {
     auto i = state_.find(index);
     if (i == state_.end()) {
       if (llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(index)) {
-        i = state_.insert(std::make_pair(index, ci->getSExtValue())).first;
+        i = state_.insert(std::make_pair(index, ci->getZExtValue())).first;
         // TODO something is missing here that would prevent the analysis from working properly. You will get extra points if you figure out what it is.
       } else {
         i = state_.insert(std::make_pair(index, AValue())).first;
@@ -285,14 +285,24 @@ class Analysis : public llvm::FunctionPass {
         currentState_[ins] = AValue::Type::Top;
       }
     } else if (llvm::ICmpInst *cmp = llvm::dyn_cast<llvm::ICmpInst>(ins)) {
-      AValue lhs = currentState_[bop->getOperand(0)];
-      AValue rhs = currentState_[bop->getOperand(1)];
+      AValue lhs = currentState_[cmp->getOperand(0)];
+      AValue rhs = currentState_[cmp->getOperand(1)];
       assert(!lhs.isBottom());
       assert(!rhs.isBottom());
       if (lhs.isConst() && rhs.isConst()) {
         switch (cmp->getSignedPredicate()) {
           // TODO I am homework
           case llvm::ICmpInst::ICMP_EQ:currentState_[ins] = lhs.value() == rhs.value();
+            break;
+          case llvm::ICmpInst::ICMP_NE:currentState_[ins] = lhs.value() != rhs.value();
+            break;
+          case llvm::ICmpInst::ICMP_SLT:currentState_[ins] = lhs.value() < rhs.value();
+            break;
+          case llvm::ICmpInst::ICMP_SGT:currentState_[ins] = lhs.value() > rhs.value();
+            break;
+          case llvm::ICmpInst::ICMP_SLE:currentState_[ins] = lhs.value() <= rhs.value();
+            break;
+          case llvm::ICmpInst::ICMP_SGE:currentState_[ins] = lhs.value() >= rhs.value();
             break;
           default:UNREACHABLE;
             break;
@@ -302,7 +312,7 @@ class Analysis : public llvm::FunctionPass {
       }
       // TODO I am homework - what other instructions do we need to care about? Do we have to do something with those we do not care about wrt cp analysis?
       // phi node
-      // sext
+      // zext
       // unary
       // vsechny ostatni instrukce
     } else if (llvm::PHINode *phi = llvm::dyn_cast<llvm::PHINode>(ins)) {
@@ -311,9 +321,9 @@ class Analysis : public llvm::FunctionPass {
         result.mergeWith(currentState_[phi->getOperand(i)]);
       }
       currentState_[ins] = result;
-    } //else if (llvm::SExtInst *sext = llvm::dyn_cast<llvm::SExtInst>(&ins)) {
-      //state_.set(zext, (*this)[zext->getOperand(0)]);
-    //}
+    } else if (llvm::ZExtInst *zext = llvm::dyn_cast<llvm::ZExtInst>(ins)) {
+      currentState_[ins] = currentState_[zext->getOperand(0)];
+    }
   }
 
   llvm::BasicBlock *b_;

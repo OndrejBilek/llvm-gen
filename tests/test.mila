@@ -1,8 +1,7 @@
-
-function t6(i, j) begin
-  if (i < j) then return i; else return j;
-end
-
 begin
-    write t6(3, 4)
+    var x
+    var y
+    x := 1
+    y := 1
+    x * y
 end

@@ -25,5 +25,8 @@
 #include <llvm/Pass.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 
-#include <llvm/Support/raw_os_ostream.h>
+#include "llvm/ADT/Statistic.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/Transforms/Utils/Local.h"
+#include "llvm/IR/InstIterator.h"
 #endif

@@ -21,20 +21,15 @@ class Optimization : public llvm::FunctionPass {
 
   bool runOnFunction(llvm::Function & f) override {
     changed_ = false;
-    for (llvm::BasicBlock & b : f) {
-      auto i = b.begin();
-      while (i != b.end()) {
-        if (i->getNumUses() == 0 and not i->isTerminator() and not llvm::dyn_cast<llvm::StoreInst>(i) and not llvm::dyn_cast<llvm::CallInst>(i)) {
-          llvm::Instruction * old = i;
-          ++i;
-          old->eraseFromParent();
-          changed_ = true;
 
-        } else {
-          ++i;
-        }
+    for (llvm::inst_iterator instIter = llvm::inst_begin(f), e = llvm::inst_end(f); instIter != e; ++instIter) {
+      llvm::Instruction *i = &*instIter;
+      if (i != nullptr && llvm::isInstructionTriviallyDead(i)) {
+        i->eraseFromParent();
+        changed_ = true;
       }
     }
+
     return changed_;
   }
 
