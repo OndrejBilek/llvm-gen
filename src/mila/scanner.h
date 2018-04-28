@@ -144,7 +144,6 @@ public:
     case Type::kwFunction:return "function keyword";
     case Type::kwReturn:return "return keyword";
     case Type::eof:return "end of file";
-    default:UNREACHABLE;
     }
   }
 

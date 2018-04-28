@@ -15,7 +15,7 @@ class Optimization : public llvm::FunctionPass {
       llvm::FunctionPass(ID) {
   }
 
-  char const * getPassName() const override {
+  llvm::StringRef getPassName() const override {
     return "DeadInstructionRemovalOptimization";
   }
 

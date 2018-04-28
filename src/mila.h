@@ -9,14 +9,14 @@
 
 #define UNREACHABLE assert(false)
 
-#define STR(what) static_cast<std::stringstream&>(std::stringstream() << what).str()
+#define STR(what) static_cast<std::stringstream&>(std::stringstream().flush() << what).str()
 
 namespace mila {
 
 class Exception : public std::exception {
 public:
 
-  Exception(std::string const &message) :
+    explicit Exception(std::string const &message) :
       message(message) {
   }
 

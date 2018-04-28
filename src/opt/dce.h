@@ -16,16 +16,16 @@ class Optimization : public llvm::FunctionPass {
       llvm::FunctionPass(ID) {
   }
 
-  char const *getPassName() const override {
+  llvm::StringRef getPassName() const override {
     return "DeadCodeElimination";
   }
 
   bool runOnFunction(llvm::Function &f) override {
-    llvm::SmallPtrSet<llvm::Instruction *, 128> alive;
-    llvm::SmallVector<llvm::Instruction *, 128> list;
+    llvm::SmallPtrSet<llvm::Instruction *, 32> alive;
+    llvm::SmallVector<llvm::Instruction *, 32> list;
 
     // Collect root instr that are live
-    for (llvm::Instruction &instr : llvm::inst_range(f)) {
+    for (llvm::Instruction &instr : llvm::instructions(f)) {
       if (instr.isTerminator() || instr.mayHaveSideEffects()) {
         alive.insert(&instr);
         list.push_back(&instr);
@@ -45,7 +45,7 @@ class Optimization : public llvm::FunctionPass {
     }
 
     // Dead if not proven otherwise
-    for (llvm::Instruction &i : llvm::inst_range(f)) {
+    for (llvm::Instruction &i : llvm::instructions(f)) {
       if (!alive.count(&i)) {
         list.push_back(&i);
         i.dropAllReferences();

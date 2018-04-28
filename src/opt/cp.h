@@ -193,7 +193,7 @@ class Analysis : public llvm::FunctionPass {
       llvm::FunctionPass(ID) {
   }
 
-  char const *getPassName() const override {
+  llvm::StringRef getPassName() const override {
     return "ConstantPropagationAnalysis";
   }
 
@@ -203,7 +203,8 @@ class Analysis : public llvm::FunctionPass {
     q_.clear();
 
     // get first basic block and initial state
-    llvm::BasicBlock *first = f.begin();
+    auto bbList = f.getBasicBlockList().begin();
+    auto *first = llvm::dyn_cast<llvm::BasicBlock>(bbList);
     incommingStates_[first] = initialState(f);
 
     // schedule the first basic block
@@ -217,8 +218,8 @@ class Analysis : public llvm::FunctionPass {
 
 
       // analyze the instructions
-      for (auto i = b_->begin(), e = b_->end(); i != e; ++i) {
-        advanceInstruction(i);
+      for (auto i = b_->getInstList().begin(), e = b_->end(); i != e; ++i) {
+        advanceInstruction(llvm::dyn_cast<llvm::Instruction>(i));
       }
 
       // get the terminator instruction
@@ -342,11 +343,11 @@ class Optimization : public llvm::FunctionPass {
       llvm::FunctionPass(ID) {
   }
 
-  char const *getPassName() const override {
+  llvm::StringRef getPassName() const override {
     return "ConstantPropagationOptimization";
   }
 
-  void getAnalysisUsage(llvm::AnalysisUsage &au) const {
+  void getAnalysisUsage(llvm::AnalysisUsage &au) const override {
     au.addRequired<Analysis>();
   }
 
@@ -363,7 +364,7 @@ class Optimization : public llvm::FunctionPass {
 
         AValue val = a.currentState_[&ins];
         if (val.isConst()) {
-          ins.replaceAllUsesWith(llvm::ConstantInt::get(llvm::getGlobalContext(), llvm::APInt(32, val.value())));
+          ins.replaceAllUsesWith(llvm::ConstantInt::get(context, llvm::APInt(32, val.value())));
           changed = true;
         }
       }

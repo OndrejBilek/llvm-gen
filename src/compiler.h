@@ -2,7 +2,6 @@
 #define COMPILER_H
 
 #include "llvm.h"
-
 #include "mila/ast.h"
 
 namespace mila {
@@ -112,8 +111,6 @@ class Compiler : public ast::Visitor {
   static llvm::Value *zero;
   static llvm::Value *one;
 
-  static llvm::LLVMContext &context;
-
  public:
   static llvm::Function *compile(ast::Module *module) {
     Compiler c;
@@ -158,7 +155,7 @@ class Compiler : public ast::Visitor {
           gv->setInitializer(llvm::ConstantInt::get(context, llvm::APInt(32, 0)));
           c->variables[d->symbol] = Location::variable(gv);
         } else {
-          c->variables[d->symbol] = Location::variable(new llvm::AllocaInst(t_int, d->symbol.name(), bb));
+          c->variables[d->symbol] = Location::variable(new llvm::AllocaInst(t_int, 0, d->symbol.name().c_str(), bb));
         }
       } else {
         d->value->accept(this);
@@ -199,7 +196,7 @@ class Compiler : public ast::Visitor {
         throw CompilerError(STR("Redefinition of variable " << s), f);
       }
 
-      llvm::AllocaInst *loc = new llvm::AllocaInst(t_int, s.name(), bb);
+      llvm::AllocaInst *loc = new llvm::AllocaInst(t_int, 0, s.name(), bb);
       c->variables[s] = Location::variable(loc);
       new llvm::StoreInst(v, loc, false, bb);
 

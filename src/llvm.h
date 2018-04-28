@@ -1,7 +1,7 @@
 #ifndef LLVM_H
 #define LLVM_H
 
-#include <llvm/IR/Verifier.h>
+#include "llvm/IR/Verifier.h"
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -23,10 +23,14 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Pass.h>
-#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/Bitcode/BitcodeReader.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/IR/InstIterator.h"
+
+static llvm::LLVMContext context;
+
 #endif
