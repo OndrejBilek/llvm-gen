@@ -1,0 +1,11 @@
+begin
+    var a
+    var b
+    var c
+    a := 1
+    b := 2
+    c := 3
+    a * b * c
+
+    return a
+end

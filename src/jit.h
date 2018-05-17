@@ -6,7 +6,6 @@
 #include "compiler.h"
 
 #include "opt/cp.h"
-#include "opt/die.h"
 #include "opt/dce.h"
 #include "opt/inlining.h"
 #include "opt/unrolling.h"
@@ -51,8 +50,7 @@ public:
       auto pm = llvm::legacy::FunctionPassManager(m);
       // add passes
       pm.add(new cp::Analysis());
-      pm.add(new cp::Optimization());
-      pm.add(new die::Optimization());
+      //pm.add(new cp::Optimization());
       pm.add(new dce::Optimization());
       pm.add(new inlining::Optimization());
       pm.add(new unrolling::Optimization());

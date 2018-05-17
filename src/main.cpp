@@ -43,11 +43,13 @@ int main(int argc, char const *argv[]) {
 
     ast::Module *m = Parser::parse(Scanner::file(filename));
     if (verbose) {
+      std::cout << "###### INPUT FILE ######" << std::endl;
       ast::Printer::print(m);
     }
 
     llvm::Function *f = Compiler::compile(m);
     if (verbose) {
+      std::cout << "###### PRE-JIT ######" << std::endl;
       f->getParent()->dump();
     }
 
@@ -56,7 +58,9 @@ int main(int argc, char const *argv[]) {
       llvm::raw_fd_ostream o(emitir, error, llvm::sys::fs::OpenFlags::F_None);
       llvm::WriteBitcodeToFile(f->getParent(), o);
     } else {
-      std::cout << JIT::compile(f)() << std::endl;
+      JIT::compile(f)();
+      std::cout << "###### POST-JIT ######" << std::endl;
+      f->getParent()->dump();
     }
 
     return EXIT_SUCCESS;

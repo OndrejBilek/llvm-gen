@@ -111,6 +111,8 @@ class Compiler : public ast::Visitor {
   static llvm::Value *zero;
   static llvm::Value *one;
 
+  static llvm::LLVMContext & context;
+
  public:
   static llvm::Function *compile(ast::Module *module) {
     Compiler c;
@@ -447,7 +449,7 @@ class Compiler : public ast::Visitor {
   }
 
   virtual void visit(ast::Number *n) {
-    result = llvm::ConstantInt::get(context, llvm::APInt(32, n->value));
+    result = llvm::ConstantInt::get(t_int, n->value, false);
   }
 
 };

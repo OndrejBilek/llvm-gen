@@ -1,7 +1,0 @@
-begin
-    var x
-    var y
-    x := 1
-    y := 1
-    x * y
-end

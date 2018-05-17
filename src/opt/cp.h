@@ -256,8 +256,6 @@ class Analysis : public llvm::FunctionPass {
     currentState_ = incommingStates_[b_];
   }
 
-  /** This is where the magic happens.
-   */
   void advanceInstruction(llvm::Instruction *ins) {
     if (llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(ins)) {
       currentState_[ins] = currentState_[load->getOperand(0)];
@@ -270,7 +268,6 @@ class Analysis : public llvm::FunctionPass {
       assert(!rhs.isBottom());
       if (lhs.isConst() && rhs.isConst()) {
         switch (bop->getOpcode()) {
-          // TODO I am homework
           case llvm::Instruction::Add:currentState_[ins] = lhs.value() + rhs.value();
             break;
           case llvm::Instruction::Sub:currentState_[ins] = lhs.value() - rhs.value();
@@ -292,7 +289,6 @@ class Analysis : public llvm::FunctionPass {
       assert(!rhs.isBottom());
       if (lhs.isConst() && rhs.isConst()) {
         switch (cmp->getSignedPredicate()) {
-          // TODO I am homework
           case llvm::ICmpInst::ICMP_EQ:currentState_[ins] = lhs.value() == rhs.value();
             break;
           case llvm::ICmpInst::ICMP_NE:currentState_[ins] = lhs.value() != rhs.value();
@@ -336,6 +332,7 @@ class Analysis : public llvm::FunctionPass {
 
 class Optimization : public llvm::FunctionPass {
  public:
+    llvm::Type *t_int = llvm::IntegerType::get(mainContext, 32);
 
   static char ID;
 
@@ -352,7 +349,6 @@ class Optimization : public llvm::FunctionPass {
   }
 
   bool runOnFunction(llvm::Function &f) override {
-    // TODO We'll do this on next lecture
     bool changed = false;
     Analysis &a = getAnalysis<Analysis>();
 
@@ -364,7 +360,7 @@ class Optimization : public llvm::FunctionPass {
 
         AValue val = a.currentState_[&ins];
         if (val.isConst()) {
-          ins.replaceAllUsesWith(llvm::ConstantInt::get(context, llvm::APInt(32, val.value())));
+          ins.replaceAllUsesWith(llvm::ConstantInt::get(ins.getType(), val.value(), false));
           changed = true;
         }
       }

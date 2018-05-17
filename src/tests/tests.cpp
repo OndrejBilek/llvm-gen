@@ -634,15 +634,15 @@ void test_tailRecursion() {
 
 void tests() {
   //test_lowering_precise();
-  test_lowering();
-  test_simpleCP();
-  test_cp();
+  //test_lowering();
+  //test_simpleCP();
+  //test_cp();
   test_die();
   test_dce();
   //test_peephole();
-  test_inlining();
-  test_unrolling();
-  test_tailRecursion();
+  //test_inlining();
+  //test_unrolling();
+  //test_tailRecursion();
 
   Test::stats();
 }

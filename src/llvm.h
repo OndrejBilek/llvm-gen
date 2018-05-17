@@ -31,6 +31,6 @@
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/IR/InstIterator.h"
 
-static llvm::LLVMContext context;
+static llvm::LLVMContext mainContext;
 
 #endif
