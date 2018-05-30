@@ -59,8 +59,10 @@ int main(int argc, char const *argv[]) {
       llvm::WriteBitcodeToFile(f->getParent(), o);
     } else {
       JIT::compile(f)();
-      std::cout << "###### POST-JIT ######" << std::endl;
-      f->getParent()->dump();
+      if (verbose) {
+        std::cout << "###### POST-JIT ######" << std::endl;
+        f->getParent()->dump();
+      }
     }
 
     return EXIT_SUCCESS;

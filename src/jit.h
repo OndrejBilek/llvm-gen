@@ -10,6 +10,9 @@
 #include "opt/inlining.h"
 #include "opt/unrolling.h"
 #include "opt/tail_recursion.h"
+#include "llvm/Transforms/Scalar/LoopUnrollPass.h"
+#include "llvm/Transforms/Scalar/TailRecursionElimination.h"
+#include "llvm/Transforms/Utils/LoopSimplify.h"
 
 namespace mila {
 
@@ -49,12 +52,21 @@ public:
       // create function pass manager
       auto pm = llvm::legacy::FunctionPassManager(m);
       // add passes
+
+      // CONSTANT PROPAGATION
       pm.add(new cp::Analysis());
-      //pm.add(new cp::Optimization());
+      pm.add(new cp::Optimization());
+
+      // DEAD CODE ELIMINATION
       pm.add(new dce::Optimization());
-      pm.add(new inlining::Optimization());
+
+      // LOOP UNROLLING
+      pm.add(llvm::createLoopSimplifyPass());
+      pm.add(new llvm::LoopInfoWrapperPass());
+      pm.add(new llvm::ScalarEvolutionWrapperPass());
+      pm.add(new llvm::DominatorTreeWrapperPass());
+      pm.add(new llvm::AssumptionCacheTracker());
       pm.add(new unrolling::Optimization());
-      pm.add(new tailrecursion::Optimization());
 
       // run the pass manager on all functions in the module
       for (llvm::Function & f : *m) {

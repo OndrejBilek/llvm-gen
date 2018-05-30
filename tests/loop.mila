@@ -1,0 +1,14 @@
+begin
+    var sum, i, n;
+    sum := 0;
+    i := 0;
+    n := 100;
+
+    while i < n do begin
+        i := i + 1
+        sum := sum + i
+    end
+
+    write sum;
+end
+
