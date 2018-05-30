@@ -1,18 +1,15 @@
 #ifndef JIT_H
 #define JIT_H
 
+#include <opt/dse.h>
 #include "llvm.h"
 #include "runtime.h"
 #include "compiler.h"
 
 #include "opt/cp.h"
 #include "opt/dce.h"
-#include "opt/inlining.h"
 #include "opt/unrolling.h"
-#include "opt/tail_recursion.h"
-#include "llvm/Transforms/Scalar/LoopUnrollPass.h"
-#include "llvm/Transforms/Scalar/TailRecursionElimination.h"
-#include "llvm/Transforms/Utils/LoopSimplify.h"
+#include "opt/dse.h"
 
 namespace mila {
 
@@ -60,6 +57,9 @@ public:
       // DEAD CODE ELIMINATION
       pm.add(new dce::Optimization());
 
+      // DEAD STORE ELIMINATION
+      pm.add(new dse::Optimization());
+
       // LOOP UNROLLING
       pm.add(llvm::createLoopSimplifyPass());
       pm.add(new llvm::LoopInfoWrapperPass());
@@ -70,7 +70,7 @@ public:
 
       // run the pass manager on all functions in the module
       for (llvm::Function & f : *m) {
-        while (pm.run(f)) {};
+          pm.run(f);
         // debug print
         //f.dump();
       }
